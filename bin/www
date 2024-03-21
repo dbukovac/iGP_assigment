@@ -1,0 +1,137 @@
+#!/usr/bin/env node
+
+/**
+ * Module dependencies.
+ */
+
+const app = require('../app');
+const debug = require('debug')('igp-assigment:server');
+const http = require('http');
+const jwt = require('jsonwebtoken');
+const { initKafkaMessagesTopic } = require('../functions/kafka/kafkaAdmin');
+const { initKafkaMessagesClient } = require('../functions/receiveMessage');
+const SECRET = process.env.SECRET;
+
+const socketServer = http.createServer();
+const { WebSocketServer } = require('ws');
+const wss = new WebSocketServer({ noServer: true });
+
+wss.on('connection', function connection(ws, request, client) {
+  console.log('New client connected!')
+  ws.on('close', () => console.log('Client has disconnected!'))
+  ws.onerror = function () {
+    console.log('websocket error')
+  }
+});
+
+socketServer.on('upgrade', function upgrade(request, socket, head) {
+  socket.on('error', onSocketError);
+
+  if(request.headers.authorization) {
+    try {
+      const token = jwt.verify(request.headers.authorization, SECRET);
+      if(token) {
+        socket.removeListener('error', onSocketError);
+    
+        wss.handleUpgrade(request, socket, head, function done(ws) {
+          wss.emit('connection', ws, request);
+        });
+        return;
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
+  socket.write('HTTP/1.1 401 Unauthorized\r\n\r\n');
+  socket.destroy();
+});
+
+function onSocketError(error) {
+  console.log(error);
+}
+
+/**
+ * Get port from environment and store in Express.
+ */
+
+const port = normalizePort(process.env.PORT || '3000');
+app.set('port', port);
+
+/**
+ * Create HTTP server.
+ */
+
+const server = http.createServer(app);
+
+/**
+ * Listen on provided port, on all network interfaces.
+ */
+
+server.listen(port);
+server.on('error', onError);
+server.on('listening', onListening);
+
+socketServer.listen(5005);
+
+/**
+ * Normalize a port into a number, string, or false.
+ */
+
+function normalizePort(val) {
+  const port = parseInt(val, 10);
+
+  if (isNaN(port)) {
+    // named pipe
+    return val;
+  }
+
+  if (port >= 0) {
+    // port number
+    return port;
+  }
+
+  return false;
+}
+
+/**
+ * Event listener for HTTP server "error" event.
+ */
+
+function onError(error) {
+  if (error.syscall !== 'listen') {
+    throw error;
+  }
+
+  const bind = typeof port === 'string'
+    ? 'Pipe ' + port
+    : 'Port ' + port;
+
+  // handle specific listen errors with friendly messages
+  switch (error.code) {
+    case 'EACCES':
+      console.error(bind + ' requires elevated privileges');
+      process.exit(1);
+      break;
+    case 'EADDRINUSE':
+      console.error(bind + ' is already in use');
+      process.exit(1);
+      break;
+    default:
+      throw error;
+  }
+}
+
+/**
+ * Event listener for HTTP server "listening" event.
+ */
+
+async function onListening() {
+  const addr = server.address();
+  const bind = typeof addr === 'string'
+    ? 'pipe ' + addr
+    : 'port ' + addr.port;
+  debug('Listening on ' + bind);
+  await initKafkaMessagesTopic();
+  await initKafkaMessagesClient(wss);
+}
