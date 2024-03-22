@@ -8,7 +8,6 @@ const app = require('../app');
 const debug = require('debug')('igp-assigment:server');
 const http = require('http');
 const jwt = require('jsonwebtoken');
-const { initKafkaMessagesTopic } = require('../functions/kafka/kafkaAdmin');
 const { initKafkaMessagesClient } = require('../functions/receiveMessage');
 const SECRET = process.env.SECRET;
 
@@ -30,7 +29,14 @@ socketServer.on('upgrade', function upgrade(request, socket, head) {
   if(request.headers.authorization) {
     try {
       const token = jwt.verify(request.headers.authorization, SECRET);
-      if(token) {
+      const expiry = new Date();
+      expiry.setTime(token.exp);
+      console.log(token);
+      console.log(new Date());
+      console.log(expiry);
+      console.log(new Date().getTime());
+      console.log(expiry.getTime());
+      if(token && expiry.getTime() > new Date().getTime()) {
         socket.removeListener('error', onSocketError);
     
         wss.handleUpgrade(request, socket, head, function done(ws) {
@@ -132,6 +138,5 @@ async function onListening() {
     ? 'pipe ' + addr
     : 'port ' + addr.port;
   debug('Listening on ' + bind);
-  await initKafkaMessagesTopic();
   await initKafkaMessagesClient(wss);
 }

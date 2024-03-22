@@ -17,7 +17,7 @@ router.post('/login', async (request, response) => {
         if (!correctPassword) {
             return response.status(400).json({ message: 'Incorrect email or password.' });
         }
-        const token = jwt.sign({ id: user._id }, SECRET);
+        const token = jwt.sign({ id: user._id, exp: (Date.now() + (60 * 60 * 1000)) }, SECRET);
         response.cookie(
             "token", token, {
             httpOnly: true,

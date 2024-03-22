@@ -1,7 +1,7 @@
 const kafka = require("./kafka/kafkaClient");
 
 async function init(sockserver) {
-    const consumer = kafka.consumer({ groupId: 'messages-group' });
+    const consumer = kafka.consumer({ groupId: 'my-app' });
     await consumer.connect();
 
     await consumer.subscribe({ topic: "messages", fromBeginning: true });

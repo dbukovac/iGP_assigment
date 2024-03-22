@@ -1,0 +1,53 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+  kafka:
+    image: confluentinc/cp-kafka
+    container_name: broker
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_INTERNAL://broker:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+  redis-server:
+    image: redis:alpine
+    container_name: redis-server
+    ports:
+      - 6379:6379
+  mongodb:
+    image : mongo
+    container_name: mongodb
+    volumes:
+      - type: bind
+        source: ./data
+        target: /data/db
+  server:
+    build:
+      context: .
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: mongodb://mongodb/iGP_assigment
+      SECRET: myawesomesecret
+      REDISCONNECTION: redis-server
+      KAFKABROKER: kafka:9092
+      PORT: 5000
+    container_name: server
+    ports:
+      - 5000:5000
+      - 5005:5005
+    depends_on:
+      - kafka
+      - redis-server
+      - mongodb
+
