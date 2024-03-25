@@ -5,6 +5,7 @@ IMPORTANT: on some occasions server docker instance will crash because it tried 
 
 Your application will be available at http://localhost:5002.
 Socket for listening to messages will be available at ws://localhost:5005.
+Swagger docs will be available at http://localhost:5002/api-docs/
 
 Create a user with POST http://localhost:5002/api/auth/register by sending 
 {
