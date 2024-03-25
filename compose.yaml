@@ -29,19 +29,10 @@ services:
     image : mongo
     container_name: mongodb
     volumes:
-      - type: bind
-        source: ./data
-        target: /data/db
+      - data:/data/db
   server:
     build:
       context: .
-    environment:
-      NODE_ENV: production
-      DATABASE_URL: mongodb://mongodb/iGP_assigment
-      SECRET: myawesomesecret
-      REDISCONNECTION: redis-server
-      KAFKABROKER: kafka:9092
-      PORT: 5000
     container_name: server
     ports:
       - 5000:5000
@@ -50,4 +41,5 @@ services:
       - kafka
       - redis-server
       - mongodb
-
+volumes:
+  data:

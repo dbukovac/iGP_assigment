@@ -9,7 +9,7 @@ const debug = require('debug')('igp-assigment:server');
 const http = require('http');
 const jwt = require('jsonwebtoken');
 const { initKafkaMessagesClient } = require('../functions/receiveMessage');
-const SECRET = process.env.SECRET;
+const config = require('config');
 
 const socketServer = http.createServer();
 const { WebSocketServer } = require('ws');
@@ -28,7 +28,7 @@ socketServer.on('upgrade', function upgrade(request, socket, head) {
 
   if(request.headers.authorization) {
     try {
-      const token = jwt.verify(request.headers.authorization, SECRET);
+      const token = jwt.verify(request.headers.authorization, config.get("SECRET"));
       const expiry = new Date();
       expiry.setTime(token.exp);
       console.log(token);
@@ -61,7 +61,7 @@ function onSocketError(error) {
  * Get port from environment and store in Express.
  */
 
-const port = normalizePort(process.env.PORT || '3000');
+const port = normalizePort(config.get("PORT") || '3000');
 app.set('port', port);
 
 /**

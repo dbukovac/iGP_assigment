@@ -1,8 +1,9 @@
 const Redis = require('ioredis');
+const config = require('config');
 
 const redisConfig = {
   port: 6379,
-  host: process.env.REDISCONNECTION,
+  host: config.get("REDISCONNECTION"),
   maxRetriesPerRequest: null,
 };
 

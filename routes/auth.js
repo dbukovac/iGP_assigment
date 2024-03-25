@@ -4,9 +4,40 @@ const { User, validate } = require('../models/user');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { queueEmail } = require('../functions/sendEmail');
-const SECRET = process.env.SECRET;
+const config = require('config');
 const jwtExpirySeconds = 300;
 
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Login user
+ *     tags: [Users]
+ *     requestBody:
+ *       description: User to login
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *             example:
+ *                email: "netko1@gmail.com"
+ *                password: "pass"
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             example:
+ *               data: [{ message: 'Successfully logged in', token: 'jwt token data' }]
+ *       400:
+ *         description: Invalid request
+ */
 router.post('/login', async (request, response) => {
     try {
         let user = await User.findOne({ email: request.body.email });
@@ -17,7 +48,7 @@ router.post('/login', async (request, response) => {
         if (!correctPassword) {
             return response.status(400).json({ message: 'Incorrect email or password.' });
         }
-        const token = jwt.sign({ id: user._id, exp: (Date.now() + (60 * 60 * 1000)) }, SECRET);
+        const token = jwt.sign({ id: user._id, exp: (Date.now() + (60 * 60 * 1000)) }, config.get("SECRET"));
         response.cookie(
             "token", token, {
             httpOnly: true,
@@ -25,13 +56,47 @@ router.post('/login', async (request, response) => {
             sameSite: "strict",
             maxAge: jwtExpirySeconds * 1000
         });
-        return response.status(200).json({ message: 'Successfully logged in' });
+        return response.status(200).json({ message: 'Successfully logged in', token: token });
 
     } catch (err) {
         return response.status(400).json({ message: err.message });
     }
 });
 
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register user
+ *     tags: [Users]
+ *     requestBody:
+ *       description: User to register
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *             example:
+ *                name: "netko"
+ *                email: "netko1@gmail.com"
+ *                password: "pass"
+ *     responses:
+ *       201:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             example:
+ *               data: [{ name: 'netko', email: "netko1@gmail.com" }]
+ *       400:
+ *         description: Invalid request
+ */
 router.post('/register', async (request, response) => {
     const { error } = validate(request.body);
     if (error) {
@@ -51,7 +116,7 @@ router.post('/register', async (request, response) => {
             });
             await user.save();
             await queueEmail(user.email);
-            return response.status(201).json(user);
+            return response.status(201).json({ name: user.name, email: user.email});
         } catch (err) {
             return response.status(400).json({ message: err.message });
         }

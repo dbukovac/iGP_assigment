@@ -1,0 +1,7 @@
+{
+    "DATABASE_URL": "mongodb://127.0.0.1/iGP_assigment",
+    "PORT": 5000,
+    "SECRET": "myawesomesecret",
+    "REDISCONNECTION": "127.0.0.1",
+    "KAFKABROKER": "localhost:9092"
+}
