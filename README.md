@@ -1,6 +1,8 @@
 When you're ready, start your application by running:
 `docker compose up --build`.
 
+IMPORTANT: on some occasions server docker instance will crash because it tried to connect to Kafka broker that has still not started. SOLUTION: shutdown all docker instances and run `docker compose up --build` again.
+
 Your application will be available at http://localhost:5002.
 Socket for listening to messages will be available at http://localhost:5005.
 
