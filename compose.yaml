@@ -35,7 +35,7 @@ services:
       context: .
     container_name: server
     ports:
-      - 5000:5000
+      - 5002:5002
       - 5005:5005
     depends_on:
       - kafka

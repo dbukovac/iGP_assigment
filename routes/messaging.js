@@ -1,15 +1,16 @@
 const express = require('express');
 const { sendMessage } = require('../functions/sendMessage');
+const logger = require('../functions/winston/winstonLogger');
 const router = express.Router();
 
 /**
  * @swagger
  * /messaging/sendMessage:
  *   post:
- *     summary: Sends a message to all logged in users
+ *     summary: Sends a message to logged in users, use email to send message to specific user
  *     tags: [Messages]
  *     requestBody:
- *       description: Message to send to all logged in users
+ *       description: Message to send to all logged in users, use email to send message to specific user
  *       required: true
  *       content:
  *         application/json:
@@ -18,8 +19,10 @@ const router = express.Router();
  *             properties:
  *               message:
  *                 type: string
+ *               email:
+ *                 type: string
  *             example:
- *                message: "poruka"
+ *                { message: "poruka", email: "netko@gmail.com" }
  *     responses:
  *       200:
  *         description: Successful response
@@ -32,10 +35,10 @@ const router = express.Router();
  */
 router.post('/sendMessage', async (request, response) => {
   try {
-    await sendMessage(request.body.message);
-    console.log("Message sent");
+    await sendMessage(request.body);
     return response.status(200).json({ message: 'Message sent' });
   } catch (error) {
+    logger.error(err.message, err);
     return response.status(400).json({ message: error.message });
   }
 });

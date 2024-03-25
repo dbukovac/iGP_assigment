@@ -5,6 +5,7 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const { queueEmail } = require('../functions/sendEmail');
 const config = require('config');
+const logger = require('../functions/winston/winstonLogger');
 const jwtExpirySeconds = 300;
 
 /**
@@ -48,7 +49,7 @@ router.post('/login', async (request, response) => {
         if (!correctPassword) {
             return response.status(400).json({ message: 'Incorrect email or password.' });
         }
-        const token = jwt.sign({ id: user._id, exp: (Date.now() + (60 * 60 * 1000)) }, config.get("SECRET"));
+        const token = jwt.sign({ id: user._id, exp: (Date.now() + (60 * 60 * 1000)), email: user.email }, config.get("SECRET"));
         response.cookie(
             "token", token, {
             httpOnly: true,
@@ -59,6 +60,7 @@ router.post('/login', async (request, response) => {
         return response.status(200).json({ message: 'Successfully logged in', token: token });
 
     } catch (err) {
+        logger.error(err.message, err);
         return response.status(400).json({ message: err.message });
     }
 });
@@ -102,7 +104,7 @@ router.post('/register', async (request, response) => {
     if (error) {
         return response.status(400).send(error.details[0].message);
     }
-    let user = await User.findOne({ email: request.body.email })
+    let user = await User.findOne({ email: request.body.email });
     if (user) {
         return response.status(400).send('User already exisits. Please sign in');
     } else {
@@ -118,6 +120,7 @@ router.post('/register', async (request, response) => {
             await queueEmail(user.email);
             return response.status(201).json({ name: user.name, email: user.email});
         } catch (err) {
+            logger.error(err.message, err);
             return response.status(400).json({ message: err.message });
         }
     }

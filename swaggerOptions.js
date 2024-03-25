@@ -7,7 +7,7 @@ const options = {
             description: 'App that allows registration and login of users and sending messages to logged in users built on Node.js API',
         },
         servers: [
-            {url:'http://localhost:5000/api/'},
+            {url:'http://localhost:5002/api/'},
         ],
     },
     apis: ['./routes/*.js'], //you can change you swagger path

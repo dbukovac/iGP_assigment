@@ -24,6 +24,7 @@
     "morgan": "~1.9.1",
     "socket.io": "^4.7.5",
     "swagger-jsdoc": "^6.2.8",
-    "swagger-ui-express": "^5.0.0"
+    "swagger-ui-express": "^5.0.0",
+    "winston": "^3.13.0"
   }
 }

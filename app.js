@@ -11,12 +11,11 @@ const swaggerJsdoc = require('swagger-jsdoc');
 
 const messagingRouter = require('./routes/messaging');
 const authRouter = require('./routes/auth');
-const options = require('./swaggerOptions');
 
 const db = mongoose.connection;
 const app = express();
 
-const specs = swaggerJsdoc(options);
+const specs = swaggerJsdoc(config.get("swaggerOptions"));
 
 app.use(logger('dev'));
 app.use(express.json());

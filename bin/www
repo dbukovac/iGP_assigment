@@ -13,13 +13,14 @@ const config = require('config');
 
 const socketServer = http.createServer();
 const { WebSocketServer } = require('ws');
+const logger = require('../functions/winston/winstonLogger');
 const wss = new WebSocketServer({ noServer: true });
 
 wss.on('connection', function connection(ws, request, client) {
-  console.log('New client connected!')
-  ws.on('close', () => console.log('Client has disconnected!'))
+  logger.info("New client connected", ws.info);
+  ws.on('close', () => logger.info("Client has disconnected", ws.info));
   ws.onerror = function () {
-    console.log('websocket error')
+    logger.error("Websocket error");
   }
 });
 
@@ -31,21 +32,17 @@ socketServer.on('upgrade', function upgrade(request, socket, head) {
       const token = jwt.verify(request.headers.authorization, config.get("SECRET"));
       const expiry = new Date();
       expiry.setTime(token.exp);
-      console.log(token);
-      console.log(new Date());
-      console.log(expiry);
-      console.log(new Date().getTime());
-      console.log(expiry.getTime());
       if(token && expiry.getTime() > new Date().getTime()) {
         socket.removeListener('error', onSocketError);
     
         wss.handleUpgrade(request, socket, head, function done(ws) {
+          ws.id = token.email;
           wss.emit('connection', ws, request);
         });
         return;
       }
     } catch (error) {
-      console.log(error);
+      logger.error("Websocket upgrade error", error);
     }
   }
 
@@ -54,7 +51,7 @@ socketServer.on('upgrade', function upgrade(request, socket, head) {
 });
 
 function onSocketError(error) {
-  console.log(error);
+  logger.error("Websocket error", error);
 }
 
 /**
@@ -116,11 +113,11 @@ function onError(error) {
   // handle specific listen errors with friendly messages
   switch (error.code) {
     case 'EACCES':
-      console.error(bind + ' requires elevated privileges');
+      logger.error(bind + ' requires elevated privileges', error);
       process.exit(1);
       break;
     case 'EADDRINUSE':
-      console.error(bind + ' is already in use');
+      logger.error(bind + ' is already in use', error);
       process.exit(1);
       break;
     default:

@@ -1,23 +1,21 @@
 const kafka = require("./kafka/kafkaClient");
+const logger = require("./winston/winstonLogger");
 
-async function sendMessage(message) {
+async function sendMessage(request) {
     const producer = kafka.producer();
-
-    console.log("Connecting Producer");
     await producer.connect();
-    console.log("Producer Connected Successfully");
+    logger.info("Producer Connected Successfully");
+    const message = {
+        value: request.message,
+        key: request.email
+    };
 
     await producer.send({
         topic: "messages",
-        messages: [
-            {
-                value: message,
-            },
-        ],
+        messages: [message],
     });
-    console.log("Producer Sent Successfully");
+    logger.info("Producer created message successfully", message);
     await producer.disconnect();
-    console.log("Producer Disconnected Successfully");
 }
 
 module.exports.sendMessage = sendMessage;

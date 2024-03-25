@@ -31,7 +31,7 @@ USER node
 COPY . .
 
 # Expose the port that the application listens on.
-EXPOSE 5000
+EXPOSE 5002
 
 # Run the application.
 CMD [ "node", "./bin/www" ]
